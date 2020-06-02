@@ -1,26 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { connect } from "react-redux";
+import "./App.css";
+import { Grid } from "semantic-ui-react";
+import ColorPanel from "./components/ColorPanel/ColorPanel";
+import SidePanel from "./components/SidePanel/SidePanel";
+import Messages from "./components/Messages/Messages";
+import MetaPanel from "./components/MetaPanel/MetaPanel";
 
-function App() {
+const App = ({ currentUser, currentChannel, isPrivateChannel }) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Grid columns="equal" className="app">
+      <ColorPanel />
+      <SidePanel
+        key={currentUser && currentUser.uid}
+        currentUser={currentUser}
+      />
+      <Grid.Column style={{ marginLeft: "320px" }}>
+        <Messages
+          key={currentChannel && currentChannel.id}
+          currentChannel={currentChannel}
+          currentUser={currentUser}
+          isPrivateChannel={isPrivateChannel}
+        />
+      </Grid.Column>
+      <Grid.Column width={4}>
+        <MetaPanel />
+      </Grid.Column>
+    </Grid>
   );
-}
+};
 
-export default App;
+const mapStateToProps = (state) => ({
+  currentUser: state.user.currentUser,
+  currentChannel: state.channel.currentChannel,
+  isPrivateChannel: state.channel.isPrivateChannel,
+});
+
+export default connect(mapStateToProps, {})(App);
