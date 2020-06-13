@@ -16,7 +16,9 @@ class Starred extends Component {
   };
 
   componentDidMount() {
-    this.addStarredListeners();
+    if (this.state.currentUser) {
+      this.addStarredListeners();
+    }
   }
 
   addStarredListeners = () => {
