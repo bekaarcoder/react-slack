@@ -28,6 +28,7 @@ class UserPanel extends Component {
     metadata: {
       contentType: "image/jpeg",
     },
+    uploading: false,
   };
 
   componentDidMount() {
@@ -82,9 +83,10 @@ class UserPanel extends Component {
   };
 
   uploadImage = () => {
+    this.setState({ uploading: true });
     const { storageRef, currentUserRef, blob, metadata } = this.state;
     storageRef
-      .child(`avatars/user-${currentUserRef.uid}`)
+      .child(`avatars/user/${currentUserRef.uid}`)
       .put(blob, metadata)
       .then((snapshot) => {
         snapshot.ref.getDownloadURL().then((downloadUrl) => {
@@ -108,15 +110,24 @@ class UserPanel extends Component {
           })
           .then(() => {
             this.closeModal();
+            this.setState({ uploading: false });
           });
       })
       .catch((err) => {
         console.log(err);
+        this.setState({ uploading: false });
       });
   };
 
   render() {
-    const { user, isLoaded, modal, previewImage, croppedImage } = this.state;
+    const {
+      user,
+      isLoaded,
+      modal,
+      previewImage,
+      croppedImage,
+      uploading,
+    } = this.state;
     console.log(croppedImage);
     return (
       isLoaded && (
@@ -210,7 +221,12 @@ class UserPanel extends Component {
                 <Icon name="image" /> Preview
               </Button>
               {croppedImage && (
-                <Button color="green" inverted onClick={this.uploadImage}>
+                <Button
+                  color="green"
+                  inverted
+                  onClick={this.uploadImage}
+                  loading={uploading}
+                >
                   <Icon name="save" /> Change Avatar
                 </Button>
               )}
