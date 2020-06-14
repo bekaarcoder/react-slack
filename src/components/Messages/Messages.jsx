@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from "react";
-import { Comment, Segment } from "semantic-ui-react";
+import { Comment, Segment, Dimmer, Loader } from "semantic-ui-react";
 import MessagesHeader from "./MessagesHeader";
 import MessagesForm from "./MessagesForm";
 import firebase from "../../firebase";
@@ -32,6 +32,12 @@ class Messages extends Component {
       this.addMessageListener(currentChannel);
       this.addUserFavouritesListener(currentChannel.id, currentUser.uid);
       this.addTypingListener(currentChannel.id);
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.messagesEnd) {
+      this.messagesEnd.scrollIntoView({ behavior: "smooth" });
     }
   }
 
@@ -229,10 +235,17 @@ class Messages extends Component {
         />
         <Segment>
           <Comment.Group className="messages" style={{ maxWidth: 900 }}>
-            {messagesLoaded &&
-              (searchTerm
-                ? this.displayMessages(searchResults)
-                : this.displayMessages(channelMessages))}
+            {messagesLoaded ? (
+              searchTerm ? (
+                this.displayMessages(searchResults)
+              ) : (
+                this.displayMessages(channelMessages)
+              )
+            ) : (
+              <Dimmer active inverted>
+                <Loader content="Loading Chat" />
+              </Dimmer>
+            )}
             {typingUsers.length > 0 &&
               typingUsers.map((user) => (
                 <div
@@ -243,6 +256,7 @@ class Messages extends Component {
                   <Typing />
                 </div>
               ))}
+            <div ref={(node) => (this.messagesEnd = node)}></div>
           </Comment.Group>
         </Segment>
         <MessagesForm

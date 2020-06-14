@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import { Segment, Input, Button, Label, Icon, Popup } from "semantic-ui-react";
-import { Picker, emojiIndex } from "emoji-mart";
+import { Segment, Input, Button, Popup } from "semantic-ui-react";
+import { Picker } from "emoji-mart";
 import "emoji-mart/css/emoji-mart.css";
 import firebase from "../../firebase";
 import UploadModal from "./UploadModal";
@@ -138,7 +138,10 @@ class MessagesForm extends Component {
       });
   };
 
-  handleKeyDown = () => {
+  handleKeyDown = (event) => {
+    if (event.keyCode === 13) {
+      this.sendMessage();
+    }
     const { message, channel, user, typingRef } = this.state;
     if (message.length !== 0) {
       typingRef.child(channel.id).child(user.uid).set(user.displayName);
