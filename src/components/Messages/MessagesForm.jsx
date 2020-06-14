@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { Segment, Input, Button, Label, Icon, Popup } from "semantic-ui-react";
+import { Picker, emojiIndex } from "emoji-mart";
+import "emoji-mart/css/emoji-mart.css";
 import firebase from "../../firebase";
 import UploadModal from "./UploadModal";
 
@@ -17,6 +19,7 @@ class MessagesForm extends Component {
     storageRef: firebase.storage().ref(),
     uploadStatus: false,
     typingRef: firebase.database().ref("typing"),
+    emojiPicker: false,
   };
 
   handleChange = (e) => {
@@ -144,10 +147,53 @@ class MessagesForm extends Component {
     }
   };
 
+  // colonToUnicode = (message) => {
+  //   return message.replace(/:[A-Za-z0-9_+-]+:/g, (x) => {
+  //     x = x.replace(/:/g, "");
+  //     let emoji = emojiIndex.emojis[x];
+  //     console.log(emojiIndex.emojis.x);
+  //     if (typeof emoji !== "undefined") {
+  //       let unicode = emoji.native;
+  //       if (typeof unicode !== "undefined") {
+  //         return unicode;
+  //       }
+  //     }
+  //     x = ":" + x + ":";
+  //     return x;
+  //   });
+  // };
+
+  handleTogglePicker = () => {
+    this.setState({ emojiPicker: !this.state.emojiPicker });
+  };
+
+  handleAddEmoji = (emoji) => {
+    const oldMessage = this.state.message;
+    const newMessage = `${oldMessage} ${emoji.native} `;
+    this.setState({ message: newMessage, emojiPicker: false });
+    setTimeout(() => this.messageInputRef.focus(), 0);
+  };
+
   render() {
-    const { message, error, loading, modalOpen, uploadStatus } = this.state;
+    const {
+      message,
+      error,
+      loading,
+      modalOpen,
+      uploadStatus,
+      emojiPicker,
+    } = this.state;
     return (
       <Segment className="msg_form">
+        {emojiPicker && (
+          <Picker
+            set="twitter"
+            className="emoji_picker"
+            title="Pick Emoji"
+            emoji="point_up"
+            onSelect={this.handleAddEmoji}
+          />
+        )}
         <Input
           placeholder="Add a message"
           fluid
@@ -158,10 +204,14 @@ class MessagesForm extends Component {
           value={message}
           name="message"
           error={error}
+          ref={(node) => (this.messageInputRef = node)}
         >
-          <Label>
-            <Icon name="edit" style={{ margin: 0 }} />
-          </Label>
+          <Button
+            icon={emojiPicker ? "close" : "add"}
+            content={emojiPicker ? "Close" : null}
+            style={{ margin: 0 }}
+            onClick={this.handleTogglePicker}
+          />
           <input />
           <Button
             icon="send"

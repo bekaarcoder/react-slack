@@ -59,3 +59,7 @@ body,
     transform: scale(0.7);
   }
 }
+
+.emoji_picker {
+  position: absolute;
+}
