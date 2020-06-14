@@ -19,6 +19,7 @@ class Channels extends Component {
     errors: {},
     channelRef: firebase.firestore().collection("channels"),
     messageRef: firebase.firestore().collection("channelMessages"),
+    typingRef: firebase.database().ref("typing"),
     notifications: [],
     user: this.props.currentUser,
     loading: false,
@@ -30,6 +31,7 @@ class Channels extends Component {
   }
 
   componentWillUnmount() {
+    console.log("unmount");
     this.removeListeners();
   }
 
@@ -111,12 +113,19 @@ class Channels extends Component {
   };
 
   setChannel = (channel) => {
+    if (this.state.channel) {
+      this.state.typingRef
+        .child(this.state.channel.id)
+        .child(this.state.user.uid)
+        .remove();
+    }
     this.props.setCurrentChannel(channel);
     this.props.setPrivateChannel(false);
     this.clearNotifications();
     // this.setState({ activeChannel: channel.id });
     this.props.setActiveChannel(channel.id);
     this.setState({ channel: channel });
+    console.log(this.state.channel);
   };
 
   clearNotifications = () => {

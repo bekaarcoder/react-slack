@@ -16,6 +16,7 @@ class MessagesForm extends Component {
     modalOpen: false,
     storageRef: firebase.storage().ref(),
     uploadStatus: false,
+    typingRef: firebase.database().ref("typing"),
   };
 
   handleChange = (e) => {
@@ -105,6 +106,8 @@ class MessagesForm extends Component {
       messageRef,
       privateMessageRef,
       privateChannel,
+      typingRef,
+      user,
     } = this.state;
 
     let ref;
@@ -124,11 +127,21 @@ class MessagesForm extends Component {
       .then((doc) => {
         console.log(`Message Sent ${doc.id}`);
         this.setState({ loading: false, message: "", uploadStatus: false });
+        typingRef.child(channel.id).child(user.uid).remove();
       })
       .catch((err) => {
         console.log(err);
         this.setState({ loading: false, error: true, uploadStatus: false });
       });
+  };
+
+  handleKeyDown = () => {
+    const { message, channel, user, typingRef } = this.state;
+    if (message.length !== 0) {
+      typingRef.child(channel.id).child(user.uid).set(user.displayName);
+    } else {
+      typingRef.child(channel.id).child(user.uid).remove();
+    }
   };
 
   render() {
@@ -141,6 +154,7 @@ class MessagesForm extends Component {
           action
           labelPosition="left"
           onChange={this.handleChange}
+          onKeyDown={this.handleKeyDown}
           value={message}
           name="message"
           error={error}

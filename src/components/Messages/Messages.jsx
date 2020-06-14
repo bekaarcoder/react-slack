@@ -4,6 +4,7 @@ import MessagesHeader from "./MessagesHeader";
 import MessagesForm from "./MessagesForm";
 import firebase from "../../firebase";
 import Message from "./Message";
+import Typing from "./Typing";
 
 class Messages extends Component {
   state = {
@@ -13,12 +14,15 @@ class Messages extends Component {
     messageRef: firebase.firestore().collection("channelMessages"),
     privateMessageRef: firebase.firestore().collection("privateMessages"),
     usersRef: firebase.firestore().collection("users"),
+    typingRef: firebase.database().ref("typing"),
+    connectedRef: firebase.database().ref(".info/connected"),
     channelMessages: [],
     uniqueUsers: 0,
     messagesLoaded: false,
     searchTerm: "",
     searchResults: [],
     isChannelStarred: false,
+    typingUsers: [],
   };
 
   componentDidMount() {
@@ -27,8 +31,44 @@ class Messages extends Component {
     if (currentChannel && currentUser) {
       this.addMessageListener(currentChannel);
       this.addUserFavouritesListener(currentChannel.id, currentUser.uid);
+      this.addTypingListener(currentChannel.id);
     }
   }
+
+  addTypingListener = (channelId) => {
+    let typingUsers = [];
+    this.state.typingRef.child(channelId).on("child_added", (snap) => {
+      if (snap.key !== this.state.currentUser.uid) {
+        typingUsers = typingUsers.concat({
+          id: snap.key,
+          name: snap.val(),
+        });
+        this.setState({ typingUsers: typingUsers });
+      }
+    });
+
+    this.state.typingRef.child(channelId).on("child_removed", (snap) => {
+      const index = typingUsers.findIndex((user) => user.id === snap.key);
+      if (index !== -1) {
+        typingUsers = typingUsers.filter((user) => user.id !== snap.key);
+        this.setState({ typingUsers: typingUsers });
+      }
+    });
+
+    this.state.connectedRef.on("value", (snap) => {
+      if (snap.val()) {
+        this.state.typingRef
+          .child(channelId)
+          .child(this.state.currentUser.uid)
+          .onDisconnect()
+          .remove((err) => {
+            if (err !== null) {
+              console.log(err);
+            }
+          });
+      }
+    });
+  };
 
   addUserFavouritesListener = (channelId, userId) => {
     this.state.usersRef
@@ -175,6 +215,7 @@ class Messages extends Component {
       searchResults,
       privateChannel,
       isChannelStarred,
+      typingUsers,
     } = this.state;
     return (
       <Fragment>
@@ -192,6 +233,16 @@ class Messages extends Component {
               (searchTerm
                 ? this.displayMessages(searchResults)
                 : this.displayMessages(channelMessages))}
+            {typingUsers.length > 0 &&
+              typingUsers.map((user) => (
+                <div
+                  style={{ display: "flex", alignItems: "center" }}
+                  key={user.id}
+                >
+                  <span className="user_typing">{user.name} is typing</span>{" "}
+                  <Typing />
+                </div>
+              ))}
           </Comment.Group>
         </Segment>
         <MessagesForm
